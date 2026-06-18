@@ -1,32 +1,15 @@
 # AgriFetch production stack — Hetzner CAX11 (ARM).
 #
-# Caddy is the single edge proxy for the whole server — it handles TLS
-# for both agrifetch.com and fleettrak24.com by joining both Docker networks.
+# This server already runs a shared Caddy (from the fuel-monitoring stack)
+# that owns ports 80/443. AgriFetch therefore runs ONLY its Node frontend,
+# joined to the shared `fleettrack` network. The existing Caddy routes
+# agrifetch.com → agrifetch-frontend:3000 (see the fuel-monitoring Caddyfile).
 #
 # Usage:
 #   docker compose -f docker-compose.prod.yml pull
 #   docker compose -f docker-compose.prod.yml up -d
 
 services:
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443"
-      - "443:443/udp"
-    environment:
-      ACME_EMAIL: ${ACME_EMAIL:-admin@agrifetch.com}
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    networks:
-      - agrifetch
-      - fleettrack
-    depends_on:
-      - frontend
-
   frontend:
     image: ${FRONTEND_IMAGE:-ghcr.io/your-org/agrifetch-frontend:latest}
     restart: unless-stopped
@@ -37,7 +20,12 @@ services:
     expose:
       - "3000"
     networks:
-      - agrifetch
+      fleettrack:
+        # Stable name for the shared Caddy to reverse_proxy to. Avoids the
+        # generic "frontend" alias colliding with fuel-monitoring's own
+        # frontend service on the same network.
+        aliases:
+          - agrifetch-frontend
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
       interval: 30s
@@ -46,11 +34,5 @@ services:
       start_period: 10s
 
 networks:
-  agrifetch:
-    name: agrifetch
   fleettrack:
-    external: true   # managed by the fuel-monitoring stack — must exist before deploying
-
-volumes:
-  caddy_data:
-  caddy_config:
+    external: true   # created by the fuel-monitoring stack
