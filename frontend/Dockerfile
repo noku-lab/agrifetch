@@ -1,11 +1,11 @@
-# AgriFetch frontend image.
+# AgriFetch frontend image (linux/amd64 — matches the deployment server).
 # Stage 1 builds the Vite SPA; stage 2 is a minimal Node 22 runtime that
 # serves static files and handles POST /api/enquiry — no nginx, no extra deps.
 #
-# The build stage is pinned to the BUILD machine's native platform (amd64 on
-# the GitHub runner). The Vite output is plain static JS/CSS/HTML, which is
-# architecture-independent — so we avoid running npm under slow ARM emulation.
-# Only the lightweight runtime stage targets arm64 (it just copies files).
+# The build stage is pinned to the BUILD machine's native platform so the
+# heavy npm build never runs under cross-arch emulation. Vite output is plain
+# static JS/CSS/HTML (architecture-independent), so this is safe regardless of
+# the eventual target platform.
 FROM --platform=$BUILDPLATFORM node:22-alpine AS build
 
 WORKDIR /app
