@@ -1,0 +1,46 @@
+# AgriFetch production stack — Hetzner CAX11 (ARM).
+#
+# Two containers: Caddy (TLS + reverse proxy) and the Node frontend server
+# (serves the Vite SPA and handles POST /api/enquiry via Resend).
+#
+# Usage:
+#   docker compose -f docker-compose.prod.yml pull
+#   docker compose -f docker-compose.prod.yml up -d
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS:-agrifetch.com}
+      ACME_EMAIL: ${ACME_EMAIL:-admin@agrifetch.com}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - frontend
+
+  frontend:
+    image: ${FRONTEND_IMAGE:-ghcr.io/your-org/agrifetch-frontend:latest}
+    restart: unless-stopped
+    environment:
+      RESEND_API_KEY: ${RESEND_API_KEY:?set RESEND_API_KEY in .env}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL:-enquiries@agrifetch.com}
+      ENQUIRY_TO_EMAIL: ${ENQUIRY_TO_EMAIL:-info@agrifetch.com}
+    expose:
+      - "3000"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  caddy_data:
+  caddy_config:

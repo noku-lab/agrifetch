@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AgriFetch — System Architecture</title>
+  <style>
+    :root {
+      --bg: #060f0c;
+      --surface: #0d1f19;
+      --surface2: #112518;
+      --border: #1e3d2f;
+      --accent: #b8f600;
+      --accent-dim: #7aab00;
+      --text: #e6f4ee;
+      --text-muted: #7aab8a;
+      --red: #ff5c5c;
+      --blue: #5ca8ff;
+      --orange: #ffb347;
+      --purple: #c084fc;
+      --teal: #2dd4bf;
+      --font: 'Segoe UI', system-ui, sans-serif;
+      --mono: 'Cascadia Code', 'Fira Code', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      min-height: 100vh;
+      padding: 2rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      margin-bottom: 0.25rem;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 2.5rem;
+    }
+
+    /* ── Diagram canvas ── */
+    .canvas {
+      display: grid;
+      grid-template-columns: 1fr 2fr 1fr;
+      grid-template-rows: auto auto auto;
+      gap: 1.5rem;
+      max-width: 1300px;
+      margin: 0 auto 3rem;
+      position: relative;
+    }
+
+    /* ── Layers ── */
+    .layer {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+    }
+
+    .layer-title {
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .layer-title .dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    /* ── Box ── */
+    .box {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1rem;
+      margin-bottom: 0.6rem;
+      position: relative;
+    }
+
+    .box:last-child { margin-bottom: 0; }
+
+    .box-name {
+      font-size: 0.82rem;
+      font-weight: 600;
+      margin-bottom: 0.2rem;
+    }
+
+    .box-detail {
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      font-family: var(--mono);
+    }
+
+    .box-badge {
+      position: absolute;
+      top: 0.5rem;
+      right: 0.75rem;
+      font-size: 0.6rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      padding: 0.1rem 0.45rem;
+      border-radius: 99px;
+      text-transform: uppercase;
+    }
+
+    /* ── Colors per domain ── */
+    .c-client  { border-left: 3px solid var(--blue); }
+    .c-gateway { border-left: 3px solid var(--accent); }
+    .c-api     { border-left: 3px solid var(--teal); }
+    .c-realtime { border-left: 3px solid var(--purple); }
+    .c-db      { border-left: 3px solid var(--orange); }
+    .c-infra   { border-left: 3px solid var(--red); }
+    .c-iot     { border-left: 3px solid var(--text-muted); }
+
+    .badge-react  { background: #0d3d5e; color: var(--blue); }
+    .badge-python { background: #2a1f00; color: var(--orange); }
+    .badge-pg     { background: #1f1530; color: var(--purple); }
+    .badge-ws     { background: #0d2b2b; color: var(--teal); }
+    .badge-infra  { background: #1f0d0d; color: var(--red); }
+    .badge-iot    { background: #1a2010; color: var(--accent-dim); }
+
+    /* ── Grid layout placement ── */
+    .zone-clients  { grid-column: 1; grid-row: 1 / 4; }
+    .zone-gateway  { grid-column: 2; grid-row: 1; }
+    .zone-api      { grid-column: 2; grid-row: 2; }
+    .zone-realtime { grid-column: 2; grid-row: 3; }
+    .zone-db       { grid-column: 3; grid-row: 1 / 3; }
+    .zone-infra    { grid-column: 3; grid-row: 3; }
+
+    /* ── Flow arrows (SVG overlay) ── */
+    .arrows-overlay {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      overflow: visible;
+    }
+
+    /* ── Data model section ── */
+    .models-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+      max-width: 1300px;
+      margin: 0 auto 3rem;
+    }
+
+    .model-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 1rem;
+    }
+
+    .model-name {
+      font-size: 0.82rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 0.6rem;
+      font-family: var(--mono);
+    }
+
+    .field {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.7rem;
+      padding: 0.2rem 0;
+      border-bottom: 1px solid var(--border);
+      gap: 0.5rem;
+    }
+
+    .field:last-child { border-bottom: none; }
+    .field-name { color: var(--text); }
+    .field-type { color: var(--text-muted); font-family: var(--mono); }
+    .pk  { color: var(--orange); }
+    .fk  { color: var(--blue); }
+
+    /* ── API table ── */
+    .api-table-wrap {
+      max-width: 1300px;
+      margin: 0 auto 3rem;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.78rem;
+    }
+
+    th {
+      background: var(--surface2);
+      color: var(--text-muted);
+      font-weight: 600;
+      text-align: left;
+      padding: 0.6rem 1rem;
+      letter-spacing: 0.05em;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+    }
+
+    td {
+      padding: 0.55rem 1rem;
+      border-bottom: 1px solid var(--border);
+      font-family: var(--mono);
+      color: var(--text);
+    }
+
+    tr:hover td { background: var(--surface); }
+
+    .method {
+      display: inline-block;
+      padding: 0.1rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 700;
+    }
+
+    .GET    { background: #0a2a0a; color: #4ade80; }
+    .POST   { background: #1a1a00; color: #facc15; }
+    .WS     { background: #0a1a2a; color: var(--blue); }
+    .SSE    { background: #0d1a2a; color: var(--teal); }
+
+    /* ── CI/CD pipeline ── */
+    .pipeline {
+      max-width: 1300px;
+      margin: 0 auto 3rem;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      flex-wrap: wrap;
+    }
+
+    .pipe-step {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 0.75rem 1.1rem;
+      font-size: 0.78rem;
+      flex: 1;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .pipe-step .ps-title { font-weight: 600; color: var(--accent); margin-bottom: 0.2rem; }
+    .pipe-step .ps-detail { font-size: 0.68rem; color: var(--text-muted); }
+
+    .pipe-arrow {
+      color: var(--border);
+      font-size: 1.4rem;
+      padding: 0 0.4rem;
+      flex-shrink: 0;
+    }
+
+    /* ── Section header ── */
+    .section-header {
+      max-width: 1300px;
+      margin: 0 auto 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .section-header h2 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .section-header .line {
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── Tech stack pills ── */
+    .stack-pills {
+      max-width: 1300px;
+      margin: 0 auto 3rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .pill {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 99px;
+      padding: 0.3rem 0.85rem;
+      font-size: 0.72rem;
+      color: var(--text);
+    }
+
+    .pill span { color: var(--text-muted); margin-right: 0.3rem; }
+
+    footer {
+      max-width: 1300px;
+      margin: 0 auto;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+  <div style="max-width:1300px;margin:0 auto">
+    <h1>AgriFetch</h1>
+    <p class="subtitle">System Architecture · Procurement at the Speed of Light</p>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 1 — System topology diagram
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <h2>System Topology</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="canvas" id="canvas">
+
+    <!-- LEFT: Clients -->
+    <div class="layer zone-clients">
+      <div class="layer-title">
+        <span class="dot" style="background:var(--blue)"></span>
+        Client Layer
+      </div>
+
+      <div class="box c-client">
+        <span class="box-badge badge-react">React 19</span>
+        <div class="box-name">Browser SPA</div>
+        <div class="box-detail">localhost:5173 / Nginx</div>
+      </div>
+
+      <div class="box c-client" style="margin-top:1rem">
+        <div class="box-name" style="font-size:0.75rem;color:var(--text-muted)">Pages</div>
+        <div class="box-detail" style="line-height:1.7">
+          / Landing<br>
+          /marketplace<br>
+          /procurement<br>
+          /logistics/:id
+        </div>
+      </div>
+
+      <div class="box c-iot" style="margin-top:1rem">
+        <span class="box-badge badge-iot">IoT</span>
+        <div class="box-name">Field Devices</div>
+        <div class="box-detail">Temp · Humidity · GPS</div>
+      </div>
+    </div>
+
+    <!-- CENTRE TOP: Gateway -->
+    <div class="layer zone-gateway">
+      <div class="layer-title">
+        <span class="dot" style="background:var(--accent)"></span>
+        Gateway / Reverse Proxy
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+        <div class="box c-gateway">
+          <span class="box-badge badge-infra">Dev</span>
+          <div class="box-name">Vite Proxy</div>
+          <div class="box-detail">/api → :8002<br>/ws → :8002</div>
+        </div>
+        <div class="box c-gateway">
+          <span class="box-badge badge-infra">Prod</span>
+          <div class="box-name">Caddy 2</div>
+          <div class="box-detail">TLS (ACME)<br>agrifetch.co.za</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTRE MID: API -->
+    <div class="layer zone-api">
+      <div class="layer-title">
+        <span class="dot" style="background:var(--teal)"></span>
+        Backend API — FastAPI 0.115 · Python 3.12
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:0.6rem">
+        <div class="box c-api">
+          <div class="box-name">Auth</div>
+          <div class="box-detail">JWT · Argon2<br>/api/auth/*</div>
+        </div>
+        <div class="box c-api">
+          <div class="box-name">Marketplace</div>
+          <div class="box-detail">Listings · Ticker<br>/api/commodities</div>
+        </div>
+        <div class="box c-api">
+          <div class="box-name">Procurement</div>
+          <div class="box-detail">Orders · Bids<br>/api/orders</div>
+        </div>
+        <div class="box c-api">
+          <div class="box-name">Shipments</div>
+          <div class="box-detail">Tracking · Routes<br>/api/shipments</div>
+        </div>
+        <div class="box c-api">
+          <div class="box-name">Telemetry</div>
+          <div class="box-detail">IoT ingest<br>/api/telemetry</div>
+        </div>
+        <div class="box c-api">
+          <div class="box-name">Health</div>
+          <div class="box-detail">/healthz<br>/readyz</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTRE BOTTOM: Real-time -->
+    <div class="layer zone-realtime">
+      <div class="layer-title">
+        <span class="dot" style="background:var(--purple)"></span>
+        Real-time Layer
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.6rem">
+        <div class="box c-realtime">
+          <span class="box-badge badge-ws">WS</span>
+          <div class="box-name">WebSocket Manager</div>
+          <div class="box-detail">ws://…/ws/market<br>Broadcast hub · fan-out</div>
+        </div>
+        <div class="box c-realtime">
+          <span class="box-badge" style="background:#0a1a1a;color:var(--teal)">SSE</span>
+          <div class="box-name">Market Ticker SSE</div>
+          <div class="box-detail">GET /api/events/market<br>HTTP fallback stream</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RIGHT TOP: Data -->
+    <div class="layer zone-db">
+      <div class="layer-title">
+        <span class="dot" style="background:var(--orange)"></span>
+        Data Layer
+      </div>
+
+      <div class="box c-db">
+        <span class="box-badge badge-pg">PostGIS 16</span>
+        <div class="box-name">PostgreSQL</div>
+        <div class="box-detail">Host port 5433<br>Spatial geometry · JSONB</div>
+      </div>
+
+      <div class="box c-db" style="margin-top:0.6rem">
+        <div class="box-name" style="font-size:0.75rem;color:var(--text-muted)">SQLAlchemy 2.x ORM</div>
+        <div class="box-detail" style="line-height:1.7">
+          users<br>
+          commodity_listings<br>
+          procurement_orders<br>
+          shipments<br>
+          telemetry
+        </div>
+      </div>
+
+      <div class="box c-db" style="margin-top:0.6rem">
+        <span class="box-badge badge-infra">Migrations</span>
+        <div class="box-name">Alembic</div>
+        <div class="box-detail">alembic upgrade head</div>
+      </div>
+
+      <div class="box c-db" style="margin-top:0.6rem">
+        <span class="box-badge" style="background:#1a1500;color:var(--orange)">S3</span>
+        <div class="box-name">Object Storage</div>
+        <div class="box-detail">Hetzner fsn1<br>Documents · images</div>
+      </div>
+    </div>
+
+    <!-- RIGHT BOTTOM: Infra -->
+    <div class="layer zone-infra">
+      <div class="layer-title">
+        <span class="dot" style="background:var(--red)"></span>
+        Infrastructure
+      </div>
+      <div class="box c-infra">
+        <span class="box-badge badge-infra">Prod</span>
+        <div class="box-name">Hetzner CAX11</div>
+        <div class="box-detail">ARM · Docker Compose</div>
+      </div>
+      <div class="box c-infra" style="margin-top:0.6rem">
+        <div class="box-name" style="font-size:0.75rem;color:var(--text-muted)">CI/CD</div>
+        <div class="box-detail" style="line-height:1.7">
+          GitHub Actions<br>
+          linux/arm64 images<br>
+          GHCR registry
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /canvas -->
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 2 — Data Models
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <h2>Data Models</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="models-grid">
+    <div class="model-card">
+      <div class="model-name">User</div>
+      <div class="field"><span class="field-name pk">id</span><span class="field-type">UUID PK</span></div>
+      <div class="field"><span class="field-name">email</span><span class="field-type">str unique</span></div>
+      <div class="field"><span class="field-name">hashed_password</span><span class="field-type">str</span></div>
+      <div class="field"><span class="field-name">role</span><span class="field-type">str</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+      <div class="field"><span class="field-name">updated_at</span><span class="field-type">timestamp</span></div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-name">CommodityListing</div>
+      <div class="field"><span class="field-name pk">id</span><span class="field-type">UUID PK</span></div>
+      <div class="field"><span class="field-name">common_name</span><span class="field-type">str idx</span></div>
+      <div class="field"><span class="field-name">category</span><span class="field-type">str idx</span></div>
+      <div class="field"><span class="field-name">bulk_price</span><span class="field-type">Decimal</span></div>
+      <div class="field"><span class="field-name">available_stock</span><span class="field-type">Decimal</span></div>
+      <div class="field"><span class="field-name">origin_region</span><span class="field-type">str idx</span></div>
+      <div class="field"><span class="field-name">certifications</span><span class="field-type">JSONB[]</span></div>
+      <div class="field"><span class="field-name">price_trend_pct</span><span class="field-type">Decimal</span></div>
+      <div class="field"><span class="field-name">badges</span><span class="field-type">JSONB[]</span></div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-name">ProcurementOrder</div>
+      <div class="field"><span class="field-name pk">id</span><span class="field-type">UUID PK</span></div>
+      <div class="field"><span class="field-name fk">buyer_id</span><span class="field-type">UUID FK→User</span></div>
+      <div class="field"><span class="field-name fk">commodity_id</span><span class="field-type">UUID FK→Listing</span></div>
+      <div class="field"><span class="field-name">quantity</span><span class="field-type">Decimal</span></div>
+      <div class="field"><span class="field-name">bid_price</span><span class="field-type">Decimal</span></div>
+      <div class="field"><span class="field-name">status</span><span class="field-type">str</span></div>
+      <div class="field"><span class="field-name">created_at</span><span class="field-type">timestamp</span></div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-name">Shipment</div>
+      <div class="field"><span class="field-name pk">id</span><span class="field-type">UUID PK</span></div>
+      <div class="field"><span class="field-name fk">order_id</span><span class="field-type">UUID FK→Order</span></div>
+      <div class="field"><span class="field-name">status</span><span class="field-type">str</span></div>
+      <div class="field"><span class="field-name">route_geometry</span><span class="field-type">PostGIS</span></div>
+      <div class="field"><span class="field-name">current_location</span><span class="field-type">Point</span></div>
+      <div class="field"><span class="field-name">eta</span><span class="field-type">timestamp</span></div>
+      <div class="field"><span class="field-name">documents</span><span class="field-type">S3 keys</span></div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-name">Telemetry</div>
+      <div class="field"><span class="field-name pk">id</span><span class="field-type">UUID PK</span></div>
+      <div class="field"><span class="field-name fk">shipment_id</span><span class="field-type">UUID FK→Shipment</span></div>
+      <div class="field"><span class="field-name">device_id</span><span class="field-type">str</span></div>
+      <div class="field"><span class="field-name">temperature</span><span class="field-type">float</span></div>
+      <div class="field"><span class="field-name">humidity</span><span class="field-type">float</span></div>
+      <div class="field"><span class="field-name">gps_point</span><span class="field-type">Point</span></div>
+      <div class="field"><span class="field-name">recorded_at</span><span class="field-type">timestamp</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 3 — API Endpoints
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <h2>API Endpoints</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="api-table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>Path</th>
+          <th>Description</th>
+          <th>Auth</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td><span class="method GET">GET</span></td><td>/healthz</td><td>Liveness probe</td><td>—</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td>/readyz</td><td>Readiness probe (DB check)</td><td>—</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td>/api/auth/login</td><td>Issue JWT access token</td><td>—</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td>/api/auth/register</td><td>Create user account</td><td>—</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td>/api/auth/logout</td><td>Invalidate session</td><td>Bearer</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td>/api/commodities</td><td>List commodity listings (filters)</td><td>Optional</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td>/api/commodities/:id</td><td>Single listing detail</td><td>Optional</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td>/api/orders</td><td>Create procurement order / bid</td><td>Bearer</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td>/api/orders</td><td>List buyer's orders</td><td>Bearer</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td>/api/shipments/:id</td><td>Shipment detail + route geometry</td><td>Bearer</td></tr>
+        <tr><td><span class="method GET">GET</span></td><td>/api/shipments</td><td>List shipments for user</td><td>Bearer</td></tr>
+        <tr><td><span class="method POST">POST</span></td><td>/api/telemetry</td><td>IoT sensor reading ingest</td><td>Device Key</td></tr>
+        <tr><td><span class="method SSE">SSE</span></td><td>/api/events/market</td><td>Live market price stream (HTTP fallback)</td><td>Optional</td></tr>
+        <tr><td><span class="method WS">WS</span></td><td>/ws/market</td><td>Live market WebSocket ticker</td><td>Optional</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 4 — CI/CD Pipeline
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <h2>CI / CD Pipeline</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="pipeline">
+    <div class="pipe-step">
+      <div class="ps-title">Push / PR</div>
+      <div class="ps-detail">GitHub trigger</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step">
+      <div class="ps-title">CI Lint &amp; Build</div>
+      <div class="ps-detail">Node 22 · Python 3.12<br>ESLint · mypy</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step">
+      <div class="ps-title">Smoke Test</div>
+      <div class="ps-detail">FastAPI + PostGIS<br>service container</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step">
+      <div class="ps-title">Docker Build</div>
+      <div class="ps-detail">QEMU linux/arm64<br>multi-stage images</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step">
+      <div class="ps-title">Push GHCR</div>
+      <div class="ps-detail">:latest · :sha-&lt;short&gt;</div>
+    </div>
+    <div class="pipe-arrow">→</div>
+    <div class="pipe-step">
+      <div class="ps-title">Deploy</div>
+      <div class="ps-detail">SSH → Hetzner CAX11<br>compose pull &amp; up -d</div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════════════════
+       SECTION 5 — Tech Stack
+  ═══════════════════════════════════════════════════════════ -->
+  <div class="section-header">
+    <h2>Tech Stack</h2>
+    <div class="line"></div>
+  </div>
+
+  <div class="stack-pills">
+    <div class="pill"><span>Frontend</span>React 19</div>
+    <div class="pill"><span>Frontend</span>TypeScript 6</div>
+    <div class="pill"><span>Frontend</span>Vite 8</div>
+    <div class="pill"><span>Frontend</span>Tailwind CSS 3.4</div>
+    <div class="pill"><span>Frontend</span>React Router v7</div>
+    <div class="pill"><span>Frontend</span>TanStack Query v5</div>
+    <div class="pill"><span>Backend</span>Python 3.12</div>
+    <div class="pill"><span>Backend</span>FastAPI 0.115</div>
+    <div class="pill"><span>Backend</span>SQLAlchemy 2.x</div>
+    <div class="pill"><span>Backend</span>Pydantic v2</div>
+    <div class="pill"><span>Backend</span>Alembic</div>
+    <div class="pill"><span>Backend</span>Argon2 / PyJWT</div>
+    <div class="pill"><span>Database</span>PostgreSQL 16</div>
+    <div class="pill"><span>Database</span>PostGIS 3.4</div>
+    <div class="pill"><span>Storage</span>Hetzner S3 (boto3)</div>
+    <div class="pill"><span>Infra</span>Docker Compose</div>
+    <div class="pill"><span>Infra</span>Caddy 2</div>
+    <div class="pill"><span>Infra</span>Nginx 1.27</div>
+    <div class="pill"><span>Infra</span>Hetzner CAX11 ARM</div>
+    <div class="pill"><span>CI/CD</span>GitHub Actions</div>
+    <div class="pill"><span>CI/CD</span>GHCR</div>
+  </div>
+
+  <footer>AgriFetch · Architecture Overview · Generated 2026-06-16</footer>
+
+</body>
+</html>
