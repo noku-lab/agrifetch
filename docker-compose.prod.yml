@@ -1,7 +1,7 @@
 # AgriFetch production stack — Hetzner CAX11 (ARM).
 #
-# Two containers: Caddy (TLS + reverse proxy) and the Node frontend server
-# (serves the Vite SPA and handles POST /api/enquiry via Resend).
+# Caddy is the single edge proxy for the whole server — it handles TLS
+# for both agrifetch.com and fleettrak24.com by joining both Docker networks.
 #
 # Usage:
 #   docker compose -f docker-compose.prod.yml pull
@@ -16,12 +16,14 @@ services:
       - "443:443"
       - "443:443/udp"
     environment:
-      SITE_ADDRESS: ${SITE_ADDRESS:-agrifetch.com}
       ACME_EMAIL: ${ACME_EMAIL:-admin@agrifetch.com}
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy_data:/data
       - caddy_config:/config
+    networks:
+      - agrifetch
+      - fleettrack
     depends_on:
       - frontend
 
@@ -34,12 +36,20 @@ services:
       ENQUIRY_TO_EMAIL: ${ENQUIRY_TO_EMAIL:-info@agrifetch.com}
     expose:
       - "3000"
+    networks:
+      - agrifetch
     healthcheck:
       test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
+
+networks:
+  agrifetch:
+    name: agrifetch
+  fleettrack:
+    external: true   # managed by the fuel-monitoring stack — must exist before deploying
 
 volumes:
   caddy_data:

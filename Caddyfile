@@ -1,18 +1,36 @@
-# AgriFetch reverse proxy + automatic HTTPS.
-# SITE_ADDRESS / ACME_EMAIL are injected from the environment (see compose).
-
 {
 	email {$ACME_EMAIL}
 }
 
-{$SITE_ADDRESS} {
+# Redirect www → naked for AgriFetch
+www.agrifetch.com {
+	redir https://agrifetch.com{uri} permanent
+}
+
+agrifetch.com {
 	encode zstd gzip
 
-	# All traffic -> Node server (serves SPA + handles /api/enquiry).
 	reverse_proxy frontend:3000
 
 	header {
-		# Basic hardening.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
+
+# Redirect www → naked for FleetTrak24
+www.fleettrak24.com {
+	redir https://fleettrak24.com{uri} permanent
+}
+
+fleettrak24.com {
+	encode zstd gzip
+
+	# Routes to the fuel-monitoring nginx via the shared fleettrack network
+	reverse_proxy fleettrack-web:80
+
+	header {
 		Strict-Transport-Security "max-age=31536000; includeSubDomains"
 		X-Content-Type-Options "nosniff"
 		Referrer-Policy "strict-origin-when-cross-origin"
