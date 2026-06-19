@@ -512,8 +512,8 @@ export default function LandingPage() {
                 <div className="flex flex-col gap-4">
                   {[
                     { icon: "location_on", text: "Manica Province, Mozambique" },
-                    { icon: "mail", text: "exports@agrifetch.co.mz" },
-                    { icon: "language", text: "www.agrifetch.co.mz" },
+                    { icon: "mail", text: "info@agrifetch.com" },
+                    { icon: "language", text: "www.agrifetch.com" },
                   ].map((item) => (
                     <div key={item.text} className="flex items-center gap-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container/60 text-secondary-fixed">

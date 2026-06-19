@@ -1,0 +1,21 @@
+Prefer TypeScript for all frontend code (components, hooks, utilities, and configuration where supported).
+
+Use Tailwind CSS as the default styling system.
+
+Favor modern, clean, and forward-looking frontend tooling and patterns (for example: component-driven architecture, accessible UI primitives, and lightweight utility-first libraries).
+
+Keep implementations minimal, maintainable, and visually clean by default.
+
+Use functional React components and hooks; avoid class components.
+
+Prefer strict TypeScript typing; avoid `any` unless there is a clear, documented reason.
+
+Prefer utility-first styling with Tailwind classes; avoid standalone CSS files unless required for third-party integration or truly global styles.
+
+Prioritize accessibility by default (semantic HTML, keyboard support, visible focus states, and proper ARIA usage when needed).
+
+Prefer composable, headless, or minimally opinionated UI primitives over heavy monolithic UI frameworks.
+
+
+
+Prefer Python for backend and postgress for database
