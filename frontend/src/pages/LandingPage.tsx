@@ -64,18 +64,19 @@ export default function LandingPage() {
         <div className="relative z-10 mx-auto flex max-w-4xl flex-col items-center text-center">
           <span className="mb-6 inline-flex items-center gap-2 rounded-full border border-secondary-fixed/30 bg-primary-container/60 px-4 py-1.5 font-label-sm text-label-sm text-secondary-fixed">
             <span className="h-1.5 w-1.5 rounded-full bg-secondary-fixed animate-pulse" />
-            Manica Province, Mozambique
+            Manica, Mozambique · Manicaland, Zimbabwe
           </span>
 
           <h1 className="mb-6 font-display-lg text-display-lg-mobile text-white drop-shadow-2xl md:text-display-lg">
             Premium Dried Produce,{" "}
-            <span className="text-secondary-fixed">From Mozambique to the World.</span>
+            <span className="text-secondary-fixed">Sourced from Mozambique &amp; Zimbabwe.</span>
           </h1>
 
           <p className="mb-12 max-w-2xl font-body-lg text-body-lg text-on-surface-variant">
-            We source, dry, and export the finest chillies, mangos, and cashew
-            nuts from our facility in Manica Province. Natural drying. Rigorous
-            sorting. Export-grade quality.
+            Headquartered in Sandton, South Africa, we import the finest dried
+            chillies, mangos, and cashew nuts from Mozambique's Manica Province
+            and Zimbabwe's Manicaland, through our sourcing warehouses in
+            Chimoio and Mutare. Rigorous sorting. Export-grade quality.
           </p>
 
           <div className="flex flex-col gap-4 sm:flex-row">
@@ -258,7 +259,7 @@ export default function LandingPage() {
               Who We Are
             </p>
             <h2 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg">
-              Rooted in Manica Province
+              Rooted in Manica &amp; Manicaland
             </h2>
           </div>
 
@@ -267,24 +268,26 @@ export default function LandingPage() {
             <GlassPanel className="flex flex-col justify-center p-lg">
               <Icon name="warehouse" filled className="mb-6 text-[48px] text-secondary-fixed" />
               <h3 className="mb-4 font-headline-lg-mobile text-headline-lg-mobile text-white">
-                Our Facility
+                Our Sourcing Warehouses
               </h3>
               <p className="mb-4 font-body-md text-body-md text-on-surface-variant">
-                AgriFetch operates a dedicated processing facility in Manica
-                Province — a region renowned for its fertile soils and
-                consistent climate, ideal for producing high-quality
+                AgriFetch is headquartered in Sandton, South Africa, and sources
+                predominantly from Mozambique's Manica Province and Zimbabwe's
+                Manicaland — neighbouring regions renowned for their fertile
+                soils and consistent climate, ideal for producing high-quality
                 agricultural commodities.
               </p>
               <p className="mb-6 font-body-md text-body-md text-on-surface-variant">
-                Our warehouse is equipped for the controlled drying of mangos,
-                the cleaning, sorting, and grading of dried chillies, and the
-                shelling, grading, and packing of cashew nuts. Every batch is
+                Our warehouses in Chimoio and Mutare are equipped for the
+                controlled drying of mangos, the cleaning, sorting, and grading
+                of dried chillies, and the shelling, grading, and packing of
+                cashew nuts. Every batch is
                 inspected before packing to ensure it meets international
                 export standards.
               </p>
               <div className="flex items-center gap-3 font-label-md text-label-md text-secondary-fixed">
                 <Icon name="location_on" filled className="text-[20px]" />
-                Manica Province, Mozambique
+                Chimoio, Mozambique · Mutare, Zimbabwe
               </div>
             </GlassPanel>
 
@@ -297,10 +300,10 @@ export default function LandingPage() {
                   <div className="absolute inset-0 flex flex-col items-center justify-center">
                     <span className="inline-flex items-center gap-2 rounded-full bg-secondary-fixed/20 px-4 py-2 font-label-md text-label-md text-secondary-fixed ring-1 ring-secondary-fixed/30">
                       <Icon name="location_on" filled className="text-[18px]" />
-                      Manica Province, Mozambique
+                      Manica · Manicaland
                     </span>
                     <p className="mt-2 font-label-sm text-label-sm text-on-surface-variant">
-                      Bordering Zimbabwe · Central-Eastern Africa
+                      Mozambique–Zimbabwe border · Head office in Sandton
                     </p>
                   </div>
                 </div>
@@ -511,17 +514,24 @@ export default function LandingPage() {
                 </p>
                 <div className="flex flex-col gap-4">
                   {[
-                    { icon: "location_on", text: "Manica Province, Mozambique" },
-                    { icon: "mail", text: "info@agrifetch.com" },
-                    { icon: "language", text: "www.agrifetch.com" },
+                    { icon: "apartment", label: "Head Office", text: "Sandton, South Africa" },
+                    { icon: "warehouse", label: "Sourcing Warehouse", text: "Chimoio, Manica, Mozambique" },
+                    { icon: "warehouse", label: "Sourcing Warehouse", text: "Mutare, Manicaland, Zimbabwe" },
+                    { icon: "mail", label: "Email", text: "info@agrifetch.com" },
+                    { icon: "language", label: "Website", text: "www.agrifetch.com" },
                   ].map((item) => (
                     <div key={item.text} className="flex items-center gap-3">
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary-container/60 text-secondary-fixed">
                         <Icon name={item.icon} filled className="text-[20px]" />
                       </span>
-                      <span className="font-body-md text-body-md text-on-surface-variant">
-                        {item.text}
-                      </span>
+                      <div className="flex flex-col">
+                        <span className="font-label-sm text-label-sm uppercase tracking-widest text-secondary-fixed/80">
+                          {item.label}
+                        </span>
+                        <span className="font-body-md text-body-md text-on-surface-variant">
+                          {item.text}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -662,7 +672,7 @@ export default function LandingPage() {
             </span>
           </div>
           <p className="font-label-sm text-label-sm text-on-surface-variant">
-            © 2025 AgriFetch · Manica Province, Mozambique · All rights reserved
+            © 2025 AgriFetch · Sandton, South Africa · All rights reserved
           </p>
           <div className="flex gap-6">
             {["Products", "About", "Process", "Contact"].map((link) => (
