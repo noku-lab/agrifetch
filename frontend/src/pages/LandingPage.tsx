@@ -3,6 +3,9 @@ import { GlassPanel } from "../components/ui/GlassPanel";
 import { Icon } from "../components/ui/Icon";
 import { CircularProgress } from "../components/ui/CircularProgress";
 import { submitEnquiry } from "../lib/api/enquiry";
+import { NAV_ANCHORS } from "../components/layout/navigation";
+
+const LOGBOOK_URL = "https://masimo.agrifetch.com/";
 
 const HERO_IMAGE =
   "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=2000&q=70";
@@ -493,6 +496,96 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* ── Farm Log Book ────────────────────────────────────── */}
+      <section id="logbook" className="px-gutter py-xl">
+        <div className="mb-16 text-center">
+          <p className="mb-2 font-label-sm text-label-sm uppercase tracking-widest text-secondary-fixed">
+            For Farmers
+          </p>
+          <h2 className="font-headline-lg-mobile text-headline-lg-mobile md:font-headline-lg md:text-headline-lg">
+            Masimo Farm Log Book
+          </h2>
+        </div>
+
+        <div className="mx-auto grid max-w-container-max gap-6 lg:grid-cols-12">
+          <GlassPanel className="glow-radial flex flex-col overflow-hidden p-lg lg:col-span-5">
+            <Icon name="menu_book" filled className="mb-6 text-[48px] text-secondary-fixed" />
+            <h3 className="mb-4 font-headline-lg-mobile text-headline-lg-mobile text-white">
+              Free farm records, on your phone
+            </h3>
+            <p className="mb-6 font-body-md text-body-md text-on-surface-variant">
+              Masimo ("fields" in Setswana and Sesotho) is AgriFetch's digital
+              farm log book for small-scale and emerging farmers. Record your
+              crops, animals and money, and see what each season really earned.
+            </p>
+            <div className="mb-8 flex flex-wrap gap-2">
+              {[
+                { icon: "money_off", text: "Free" },
+                { icon: "wifi_off", text: "Works offline" },
+                { icon: "install_mobile", text: "Installs on your phone" },
+              ].map((chip) => (
+                <span
+                  key={chip.text}
+                  className="inline-flex items-center gap-1.5 rounded-full bg-secondary-fixed/20 px-3 py-1 font-label-sm text-label-sm text-secondary-fixed ring-1 ring-secondary-fixed/30"
+                >
+                  <Icon name={chip.icon} filled className="text-[16px]" />
+                  {chip.text}
+                </span>
+              ))}
+            </div>
+            <a
+              href={LOGBOOK_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-auto inline-flex w-full items-center justify-center gap-2 whitespace-nowrap rounded-lg bg-secondary-fixed px-8 py-4 sm:w-auto sm:self-start font-label-md text-label-md text-on-secondary-fixed transition-all neon-glow active:scale-95"
+            >
+              Open the Log Book
+              <Icon name="open_in_new" className="text-[18px]" />
+            </a>
+          </GlassPanel>
+
+          <div className="grid gap-6 sm:grid-cols-2 lg:col-span-7">
+            {[
+              {
+                icon: "grass",
+                title: "Crops",
+                body: "Log plantings, activities and harvests, with a season timeline for every field.",
+              },
+              {
+                icon: "pets",
+                title: "Livestock",
+                body: "Keep a live herd register: births, deaths, sales, moves and treatments.",
+              },
+              {
+                icon: "payments",
+                title: "Money Book",
+                body: "Track every cost and sale to see gross margin, cost per stage and break-even price.",
+              },
+              {
+                icon: "summarize",
+                title: "Reports",
+                body: "Share season, herd and money reports as a PDF or on WhatsApp with lenders and extension officers.",
+              },
+            ].map((feature) => (
+              <GlassPanel
+                key={feature.title}
+                className="group flex flex-col p-lg transition-colors hover:border-secondary-fixed"
+              >
+                <Icon
+                  name={feature.icon}
+                  filled
+                  className="mb-6 text-[40px] text-secondary-fixed transition-transform duration-200 group-hover:scale-110"
+                />
+                <h3 className="mb-3 font-headline-lg-mobile text-headline-lg-mobile text-white">
+                  {feature.title}
+                </h3>
+                <p className="font-body-md text-body-md text-on-surface-variant">{feature.body}</p>
+              </GlassPanel>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* ── Contact ──────────────────────────────────────────── */}
       <section id="contact" className="px-gutter py-xl">
         <div className="mx-auto max-w-container-max">
@@ -674,14 +767,14 @@ export default function LandingPage() {
           <p className="font-label-sm text-label-sm text-on-surface-variant">
             © 2025 AgriFetch · Sandton, South Africa · All rights reserved
           </p>
-          <div className="flex gap-6">
-            {["Products", "About", "Process", "Contact"].map((link) => (
+          <div className="flex flex-wrap justify-center gap-x-6 gap-y-2">
+            {NAV_ANCHORS.map((link) => (
               <button
-                key={link}
-                onClick={() => scrollTo(link.toLowerCase())}
+                key={link.id}
+                onClick={() => scrollTo(link.id)}
                 className="font-label-sm text-label-sm text-on-surface-variant transition-colors hover:text-secondary-fixed"
               >
-                {link}
+                {link.label}
               </button>
             ))}
           </div>

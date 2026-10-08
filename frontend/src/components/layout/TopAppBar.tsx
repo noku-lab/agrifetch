@@ -1,12 +1,6 @@
 import { useState } from "react";
 import { Icon } from "../ui/Icon";
-
-const NAV_LINKS = [
-  { label: "Products", id: "products" },
-  { label: "About", id: "about" },
-  { label: "Process", id: "process" },
-  { label: "Contact", id: "contact" },
-];
+import { NAV_ANCHORS } from "./navigation";
 
 function scrollTo(id: string) {
   document.getElementById(id)?.scrollIntoView({ behavior: "smooth" });
@@ -30,12 +24,12 @@ export function TopAppBar() {
         </button>
 
         {/* Desktop nav */}
-        <nav className="hidden items-center gap-2 md:flex">
-          {NAV_LINKS.map((link) => (
+        <nav className="hidden items-center gap-2 lg:flex">
+          {NAV_ANCHORS.map((link) => (
             <button
               key={link.id}
               onClick={() => scrollTo(link.id)}
-              className="rounded-lg px-4 py-2 font-label-md text-label-md text-on-surface-variant transition-colors hover:bg-surface-variant/30 hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-fixed/50"
+              className="whitespace-nowrap rounded-lg px-4 py-2 font-label-md text-label-md text-on-surface-variant transition-colors hover:bg-surface-variant/30 hover:text-on-surface focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-secondary-fixed/50"
             >
               {link.label}
             </button>
@@ -46,7 +40,7 @@ export function TopAppBar() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => scrollTo("contact")}
-            className="hidden rounded-lg bg-secondary-fixed px-5 py-2 font-label-md text-label-md text-on-secondary-fixed transition-all neon-glow active:scale-95 sm:block"
+            className="hidden whitespace-nowrap rounded-lg bg-secondary-fixed px-5 py-2 font-label-md text-label-md text-on-secondary-fixed transition-all neon-glow active:scale-95 sm:block"
           >
             Enquire Now
           </button>
@@ -54,7 +48,7 @@ export function TopAppBar() {
             type="button"
             aria-label={menuOpen ? "Close menu" : "Open menu"}
             onClick={() => setMenuOpen((o) => !o)}
-            className="grid h-10 w-10 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-variant/40 hover:text-on-surface focus-visible:outline-none md:hidden"
+            className="grid h-10 w-10 place-items-center rounded-full text-on-surface-variant transition-colors hover:bg-surface-variant/40 hover:text-on-surface focus-visible:outline-none lg:hidden"
           >
             <Icon name={menuOpen ? "close" : "menu"} />
           </button>
@@ -63,9 +57,9 @@ export function TopAppBar() {
 
       {/* Mobile dropdown */}
       {menuOpen && (
-        <div className="border-t border-outline-variant/20 bg-surface-container/80 px-gutter pb-4 backdrop-blur-xl md:hidden">
+        <div className="border-t border-outline-variant/20 bg-surface-container/80 px-gutter pb-4 backdrop-blur-xl lg:hidden">
           <nav className="flex flex-col gap-1 pt-3">
-            {NAV_LINKS.map((link) => (
+            {NAV_ANCHORS.map((link) => (
               <button
                 key={link.id}
                 onClick={() => { scrollTo(link.id); setMenuOpen(false); }}
