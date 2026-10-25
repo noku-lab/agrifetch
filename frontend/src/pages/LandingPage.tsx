@@ -511,7 +511,7 @@ export default function LandingPage() {
           <GlassPanel className="glow-radial flex flex-col overflow-hidden p-lg lg:col-span-5">
             <Icon name="menu_book" filled className="mb-6 text-[48px] text-secondary-fixed" />
             <h3 className="mb-4 font-headline-lg-mobile text-headline-lg-mobile text-white">
-              Free farm records, on your phone
+              Digital farm records for African farmers
             </h3>
             <p className="mb-6 font-body-md text-body-md text-on-surface-variant">
               Masimo ("fields" in Setswana and Sesotho) is AgriFetch's digital
